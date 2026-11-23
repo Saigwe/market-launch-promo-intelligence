@@ -1,0 +1,33 @@
+// DAX measures for a Power BI build on the gold marts. Shares are ratios of sums: never average a share.
+
+// ---- Panel (fct_panel_weekly) ----
+Market Value USD = SUM ( fct_panel_weekly[value_usd] )
+Corvane Value USD = CALCULATE ( [Market Value USD], fct_panel_weekly[brand] = "Corvane" )
+Value Share = DIVIDE ( [Corvane Value USD], [Market Value USD] )
+Market Value USD (Comparable) = CALCULATE ( [Market Value USD], dim_retailer[is_constant_panel] = TRUE () )
+Corvane Value USD (Comparable) = CALCULATE ( [Corvane Value USD], dim_retailer[is_constant_panel] = TRUE () )
+Value Share (Comparable) = DIVIDE ( [Corvane Value USD (Comparable)], [Market Value USD (Comparable)] )
+Unit Share = DIVIDE ( CALCULATE ( SUM ( fct_panel_weekly[units] ), fct_panel_weekly[brand] = "Corvane" ), SUM ( fct_panel_weekly[units] ) )
+
+// Year-ago comparison on the week dimension (52 weeks back).
+Value Share YA = CALCULATE ( [Value Share], DATEADD ( dim_week[week_start], -364, DAY ) )
+Value Share (Comparable) YA = CALCULATE ( [Value Share (Comparable)], DATEADD ( dim_week[week_start], -364, DAY ) )
+Share Change (pts) = [Value Share] - [Value Share YA]
+Share Change Comparable (pts) = [Value Share (Comparable)] - [Value Share (Comparable) YA]
+Change From Panel Coverage (pts) = [Share Change (pts)] - [Share Change Comparable (pts)]
+
+// ---- Own sales (fct_sales_weekly) ----
+Net Sales USD = SUM ( fct_sales_weekly[net_sales_usd] )
+Units = SUM ( fct_sales_weekly[units] )
+ASP USD = DIVIDE ( [Net Sales USD], [Units] )
+Gross Margin USD = SUM ( fct_sales_weekly[gross_margin_usd] )
+Gross Margin % = DIVIDE ( [Gross Margin USD], [Net Sales USD] )
+
+// ---- Price gap (rpt_price_gap_weekly) ----
+Price Gap = DIVIDE ( AVERAGE ( rpt_price_gap_weekly[corvane_price_local] ), AVERAGE ( rpt_price_gap_weekly[competitor_price_local] ) ) - 1
+
+// ---- Promotions (rpt_promo_eval, method = pre8 by default) ----
+Lift Units = CALCULATE ( SUM ( rpt_promo_eval[lift_units] ), rpt_promo_eval[method] = "pre8", rpt_promo_eval[is_eligible] = TRUE () )
+Baseline Units = CALCULATE ( SUMX ( rpt_promo_eval, rpt_promo_eval[baseline_units] * rpt_promo_eval[promo_weeks] ), rpt_promo_eval[method] = "pre8", rpt_promo_eval[is_eligible] = TRUE () )
+Lift % = DIVIDE ( [Lift Units], [Baseline Units] )
+Incremental Margin USD = CALCULATE ( SUM ( rpt_promo_eval[incremental_margin_usd] ), rpt_promo_eval[method] = "pre8", rpt_promo_eval[is_eligible] = TRUE () )

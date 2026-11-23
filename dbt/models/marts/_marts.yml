@@ -1,0 +1,37 @@
+version: 2
+
+models:
+  - name: fct_sales_weekly
+    tests:
+      - unique_combination:
+          arguments:
+            columns: [week_start, retailer_id, sku]
+  - name: fct_panel_weekly
+    tests:
+      - unique_combination:
+          arguments:
+            columns: [week_start, retailer_id, category, brand]
+  - name: rpt_share_weekly
+    tests:
+      - unique_combination:
+          arguments:
+            columns: [week_start, market, category]
+  - name: rpt_promo_eval
+    tests:
+      - unique_combination:
+          arguments:
+            columns: [promo_id, method]
+  - name: dim_product
+    columns:
+      - name: sku
+        tests: [unique, not_null]
+      - name: category
+        tests:
+          - accepted_values:
+              arguments:
+                values: ['Headphones', 'Earbuds', 'Speakers']
+  - name: int_week_month_bridge
+    tests:
+      - unique_combination:
+          arguments:
+            columns: [week_start, month_start]

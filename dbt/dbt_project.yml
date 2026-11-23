@@ -1,0 +1,28 @@
+name: market_intelligence
+version: 1.0.0
+config-version: 2
+profile: market_intelligence
+
+model-paths: ["models"]
+macro-paths: ["macros"]
+test-paths: ["tests"]
+target-path: target
+clean-targets: ["target", "dbt_packages"]
+
+vars:
+  # Demo assumptions. Change one and rerun `make dbt` to see its consequence.
+  reconcile_tolerance: 0.02     # weekly panel spread to months vs the monthly provider: allowed relative difference
+  min_clean_pre_weeks: 6        # a promotion needs this many clean weeks before it to be evaluated
+  share_window_weeks: 13        # "latest" period for share change: the last N complete weeks against the same weeks a year earlier
+
+models:
+  market_intelligence:
+    staging:
+      +schema: silver
+      +materialized: table
+    intermediate:
+      +schema: silver
+      +materialized: table
+    marts:
+      +schema: gold
+      +materialized: table
